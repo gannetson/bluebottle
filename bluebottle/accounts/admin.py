@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
+from django_tools.middlewares import ThreadLocal
 
 from .models import BlueBottleUser, UserAddress
 
@@ -114,8 +115,10 @@ class BlueBottleAdmin(UserAdmin):
     ordering = ('-date_joined', 'email',)
 
     def login_as_user(self, obj):
-        return "<a href='/login/user/{0}'>{1}</a>".format(obj.id, 'Login as user')
-
+        request = ThreadLocal.get_current_request()
+        if request.user.is_superuser:
+            return "<a href='/login/user/{0}'>{1}</a>".format(obj.id, 'Login as user')
+        return _('not allowed')
     login_as_user.allow_tags = True
 
 
