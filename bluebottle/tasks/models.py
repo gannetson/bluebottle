@@ -15,7 +15,6 @@ from taggit_autocomplete_modified.managers import (
 from bluebottle.utils.utils import clean_for_hashtag
 from bluebottle.projects import get_project_model
 
-
 options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('default_serializer',)
 
 PROJECT_MODEL = get_project_model()

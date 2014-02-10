@@ -4,13 +4,11 @@ from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
 from . import get_project_model
-from .models import (
-    ProjectTheme, ProjectPhase, ProjectBudgetLine, ProjectDetailField)
+from .models import ProjectTheme, ProjectPhase
 from .serializers import (
     ManageProjectSerializer, ProjectPreviewSerializer, ProjectThemeSerializer,
-    ProjectSerializer, ProjectPhaseSerializer, ProjectBudgetLineSerializer,
-    ProjectDetailFieldSerializer)
-from .permissions import IsProjectOwner, IsProjectOwnerOrReadOnly
+    ProjectSerializer, ProjectPhaseSerializer)
+from .permissions import IsProjectOwner
 
 PROJECT_MODEL = get_project_model()
 
@@ -115,11 +113,6 @@ class ProjectDetail(generics.RetrieveAPIView):
         return qs
 
 
-class ProjectDetailFieldList(generics.ListAPIView):
-    model = ProjectDetailField
-    serializer_class = ProjectDetailFieldSerializer
-
-
 class ManageProjectList(generics.ListCreateAPIView):
     model = PROJECT_MODEL
     serializer_class = ManageProjectSerializer
@@ -167,15 +160,3 @@ class ProjectThemeDetail(generics.RetrieveAPIView):
     model = ProjectTheme
     serializer_class = ProjectThemeSerializer
 
-
-class ManageProjectBudgetLineList(generics.ListCreateAPIView):
-    model = ProjectBudgetLine
-    serializer_class = ProjectBudgetLineSerializer
-    permission_classes = (IsProjectOwnerOrReadOnly, )
-    paginate_by = 20
-
-
-class ManageProjectBudgetLineDetail(generics.RetrieveUpdateDestroyAPIView):
-    model = ProjectBudgetLine
-    serializer_class = ProjectBudgetLineSerializer
-    permission_classes = (IsProjectOwnerOrReadOnly, )

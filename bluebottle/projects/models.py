@@ -9,7 +9,7 @@ from django.utils.translation import ugettext as _
 from babel.numbers import format_currency
 from django_extensions.db.fields import (
     ModificationDateTimeField, CreationDateTimeField)
-from djchoices import DjangoChoices, ChoiceItem
+
 from sorl.thumbnail import ImageField
 from taggit_autocomplete_modified.managers import (
     TaggableManagerAutocomplete as TaggableManager)
@@ -195,68 +195,3 @@ class Project(BaseProject):
     class Meta:
         swappable = 'PROJECTS_PROJECT_MODEL'
 
-
-class ProjectDetailField(models.Model):
-    class Types(DjangoChoices):
-        text = ChoiceItem('text', label=_('Text field (one line)'))
-        textarea = ChoiceItem('textarea', label=_('Text area (multiple lines)'))
-        checkbox = ChoiceItem('checkbox', label=_('Checkbox'))
-        radio = ChoiceItem('radio', label=_('Radio buttons'))
-        select = ChoiceItem('select', label=_('Select menu'))
-
-    name = models.CharField(max_length=100)
-    slug = models.CharField(max_length=30, unique=True)
-    active = models.BooleanField(default=True)
-    description = models.CharField(max_length=300, blank=True)
-    type = models.CharField(max_length=100, choices=Types.choices)
-
-    def __unicode__(self):
-        return self.name
-
-
-class ProjectDetailFieldValue(models.Model):
-    field = models.ForeignKey('ProjectDetailField')
-    value = models.CharField(max_length=200)
-    text = models.CharField(max_length=200, blank=True)
-
-
-class ProjectDetailFieldAttribute(models.Model):
-    field = models.ForeignKey('ProjectDetailField')
-    attribute = models.CharField(max_length=200)
-    value = models.CharField(max_length=200)
-
-
-class ProjectDetail(models.Model):
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
-    field = models.ForeignKey(ProjectDetailField)
-    value = models.TextField()
-
-    class Meta:
-        unique_together = ('project', 'field')
-
-
-class ProjectBudgetLine(models.Model):
-    """
-    BudgetLine: Entries to the Project Budget sheet.
-    This is the budget for the amount asked from this
-    website.
-    """
-    project = models.ForeignKey(settings.PROJECTS_PROJECT_MODEL)
-    description = models.CharField(_('description'), max_length=255, default='')
-    currency = models.CharField(max_length=3, default='EUR')
-    amount = models.PositiveIntegerField(_('amount (in cents)'))
-
-    created = CreationDateTimeField()
-    updated = ModificationDateTimeField()
-
-    class Meta:
-        verbose_name = _('budget line')
-        verbose_name_plural = _('budget lines')
-
-    def __unicode__(self):
-        language = translation.get_language().split('-')[0]
-        if not language:
-            language = 'en'
-        return u'{0} - {1}'.format(
-            self.description,
-            format_currency(self.amount / 100.0, self.currency, locale=language))

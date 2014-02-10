@@ -7,9 +7,7 @@ from sorl.thumbnail.admin import AdminImageMixin
 
 from . import get_project_model
 
-from .models import (
-    ProjectPhase, ProjectDetailField, ProjectDetailFieldAttribute,
-    ProjectDetailFieldValue, ProjectDetail, ProjectTheme)
+from .models import ProjectPhase, ProjectTheme
 
 
 PROJECT_MODEL = get_project_model()
@@ -21,17 +19,10 @@ class ProjectThemeAdmin(admin.ModelAdmin):
 admin.site.register(ProjectTheme, ProjectThemeAdmin)
 
 
-class ProjectDetailAdmin(admin.StackedInline):
-    model = ProjectDetail
-    extra = 0
-    can_delete = False
-
-
 class BaseProjectAdmin(AdminImageMixin, admin.ModelAdmin):
     date_hierarchy = 'created'
     ordering = ('-created',)
     save_on_top = True
-    inlines = [ProjectDetailAdmin, ]
 
     actions = ('set_failed', 'toggle_campaign')
 
@@ -40,7 +31,7 @@ class BaseProjectAdmin(AdminImageMixin, admin.ModelAdmin):
 
     search_fields = ('title', 'owner__first_name', 'owner__last_name', 'partner_organization__name')
 
-    raw_id_fields = ('owner',)
+    raw_id_fields = ('owner', )
 
     prepopulated_fields = {'slug': ('title',)}
 
@@ -98,28 +89,3 @@ class ProjectPhaseAdmin(admin.ModelAdmin):
 
 admin.site.register(ProjectPhase, ProjectPhaseAdmin)
 
-
-class ProjectDetailFieldAttributeAdmin(admin.TabularInline):
-    model = ProjectDetailFieldAttribute
-    extra = 0
-    verbose_name = 'attribute'
-    verbose_name_plural = 'attributes'
-
-
-class ProjectDetailFieldValueAdmin(admin.TabularInline):
-    model = ProjectDetailFieldValue
-    extra = 0
-    verbose_name = 'value'
-    verbose_name_plural = 'values'
-
-
-class ProjectDetailFieldAdmin(admin.ModelAdmin):
-    model = ProjectDetailField
-    inlines = [ProjectDetailFieldAttributeAdmin, ProjectDetailFieldValueAdmin]
-    list_filter = ['active', ]
-    list_display_links = ['name']
-    list_display = ['name', 'type', 'description']
-
-    prepopulated_fields = {'slug': ('name',)}
-
-admin.site.register(ProjectDetailField, ProjectDetailFieldAdmin)
