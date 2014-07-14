@@ -10,7 +10,14 @@ App.SignupView = App.FormView.extend({
             evt.preventDefault();
             this.get('controller').send('signup');
         }
-    }
+    },
+
+    firstName: gettext("First name"),
+    surname: gettext("Surname"),
+    emailText: gettext("Email address"),
+    reenterEmail: gettext("Re-enter email address"),
+    passwordText: gettext("Password")
+
 });
 
 App.UserModalView = App.FormView.extend({
@@ -19,7 +26,10 @@ App.UserModalView = App.FormView.extend({
 
 App.LoginView = App.FormView.extend({
     templateName: 'login',
-    
+
+    placeholderText: gettext("Email address"),
+    passwordText: gettext("Password"),
+
     next: function() {
         return  String(window.location);
     }.property(),
@@ -49,13 +59,15 @@ App.PasswordResetView = App.FormView.extend({
 
 });
 
-App.PasswordRequestView = App.FormView.extend({});
+App.PasswordRequestView = App.FormView.extend({
+    placeholderText: gettext("Email address"),
+});
 
 
 App.ItemSelectView = Em.Select.extend({
     optionValuePath: "content.id",
     optionLabelPath: "content.name",
-    prompt: "Pick an item"
+    prompt: gettext("Pick an item")
 });
 
 App.DisableAccountView = App.FormView.extend({

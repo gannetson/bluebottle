@@ -34,7 +34,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                 'validateProperty': 'validPassword',
                 'message': Em.get(App, 'settings.minPasswordError'),
                 'priority': 2
-            },
+            }
         ]);
 
         this._clearModel();
@@ -62,6 +62,16 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
         this.set('validationErrors', null);
         this.set('isBusy', false);
     },
+
+    didError: function () {
+        if (this.get('error')) {
+            // Error set so not busy anymore
+            this.set('isBusy', false);
+
+            // Call error action on the modal
+            this.send('modalError');
+        }
+    }.observes('error'),
 
     actions: {
         signup: function() {
@@ -122,7 +132,7 @@ App.SignupController = Ember.ObjectController.extend(BB.ModalControllerMixin, Ap
                         loginObject = Em.Object.create({
                             matchId: conflict.id,
                             matchType: conflict.type,
-                            username: failedUser.get('email')
+                            email: failedUser.get('email')
                         });
 
                     _this.send('modalFlip', 'login', loginObject);
@@ -221,10 +231,26 @@ App.UserModalController = Ember.ObjectController.extend(BB.ModalControllerMixin,
 
 App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     loginTitle: gettext('Log in to <Bluebottle Project>'),
-    requiredFields: ['username', 'password'],
+    fieldsToWatch: ['email.length', 'password.length'],
+    requiredFields: ['email', 'password'],
 
     init: function () {
         this._super();
+
+        this.set('errorDefinitions', [
+            {
+                'property': 'email',
+                'validateProperty': 'email.length',
+                'message': gettext('Email required'),
+                'priority': 1
+            },
+            {
+                'property': 'password',
+                'validateProperty': 'password.length',
+                'message': gettext('Password required'),
+                'priority': 2
+            }
+        ]);
 
         this._clearModel();
     },
@@ -256,11 +282,13 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
     //       Setting/clearing errors should be done in the same
     //       way for all forms.
     didError: function (error) {
-        // Error set so not busy anymore
-        this.set('isBusy', false);
+        if (this.get('error')) {
+            // Error set so not busy anymore
+            this.set('isBusy', false);
 
-        // Call error action on the modal
-        this.send('modalError');
+            // Call error action on the modal
+            this.send('modalError');
+        }
     }.observes('error'),
 
     actions: {
@@ -268,16 +296,27 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
             Ember.assert("LoginController needs implementation of authorizeUser.", this.authorizeUser !== undefined);
             var _this = this;
 
+            // Enable the validation of errors on fields only after pressing the signup button
+            _this.enableValidation()
+
+            // Ignoring API errors here, we are passing ignoreApiErrors=true
+            _this.set('validationErrors', _this.validateErrors(_this.get('errorDefinitions'), _this.get('model'), true));
+
+            // Check client side errors
+            if (_this.get('validationErrors')) {
+                this.send('modalError');
+                return false
+            }
+
             // Set is loading property until success or error response
             this.set('isBusy', true);
 
-            return _this.authorizeUser(_this.get('username'), _this.get('password')).then(function (user) {
+            return _this.authorizeUser(_this.get('email'), _this.get('password')).then(function (user) {
                 _this.set('currentUser.model', user);
 
                 // Call the loadNextTransition in case the user was unauthenticated and was
                 // shown the sign in / up modal then they should transition to the requests route
                 _this.send('loadNextTransition');
-                
                 // Close the modal
                 _this.send('close');
             }, function (error) {
@@ -290,7 +329,7 @@ App.LoginController = Em.ObjectController.extend(BB.ModalControllerMixin, App.Co
         },
 
         passwordRequest: function () {
-            var email = Em.Object.create({email: this.get('username')})
+            var email = Em.Object.create({email: this.get('email')})
             this.send('modalSlide', 'passwordRequest', email);
         }
     }
@@ -376,11 +415,6 @@ App.PasswordRequestController = Ember.ObjectController.extend(App.ControllerVali
     }
 });
 
-App.PasswordRequestSuccessController = Ember.ObjectController.extend(BB.ModalControllerMixin, {
-    needs: ['login'],
-    successRequestPasswordTitle : gettext("Help is on its way"),
-    successMessage: gettext("We\'ve sent a password reset link to")
-});
 
 App.PasswordResetController = Ember.ObjectController.extend(BB.ModalControllerMixin, App.ControllerValidationMixin, {
     needs: ['login'],
